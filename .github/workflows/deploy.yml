@@ -3,43 +3,55 @@ name: Deploy FE (Build on Server)
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - "test_cicd/**"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${SSH_PORT:-22} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
       - name: SSH into server & deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 103.178.153.126       
-          username: root   
-          key: ${{ secrets.SSH_KEY }}   #gue nga tau ini  isinya apa
-          port: 22
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}   # ini isinya PRIVATE KEY (BEGIN...END)
+          port: ${{ secrets.SSH_PORT }}
           script: |
             set -euo pipefail
 
             APP_DIR="/srv/apps/test_cicd_fe_reactvite"
             REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
 
-            # clone or pull
+            # clone or pull repo monorepo
             if [ ! -d "$APP_DIR/.git" ]; then
               mkdir -p "$APP_DIR"
               git clone "$REPO_URL" "$APP_DIR"
             fi
 
             cd "$APP_DIR"
-
-            # pastikan branch
             git fetch origin
             git checkout main
             git pull --rebase origin main
 
-            # isi ENV untuk domain
+            # masuk ke subfolder FE yg berisi Dockerfile & docker-compose
+            cd test_cicd
+
+            # siapkan env (domain buat Traefik label)
             if [ ! -f .env ]; then
-              echo "APP_DOMAIN=laresae.my.id" > .env
+              echo "APP_DOMAIN=${{ secrets.APP_DOMAIN }}" > .env
             fi
-            export $(grep -v '^#' .env | xargs)
+            export $(grep -v '^#' .env | xargs || true)
+
+            # pastikan network traefik ada
+            docker network create traefik_proxy || true
 
             # build & run
             docker compose --env-file .env up -d --build
