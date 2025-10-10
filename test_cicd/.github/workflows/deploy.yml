@@ -1,0 +1,48 @@
+name: Deploy FE (Build on Server)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into server & deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 103.178.153.126       
+          username: root   
+          key: ${{ secrets.SSH_KEY }}   #gue nga tau ini  isinya apa
+          port: 22
+          script: |
+            set -euo pipefail
+
+            APP_DIR="/srv/apps/test_cicd_fe_reactvite"
+            REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
+
+            # clone or pull
+            if [ ! -d "$APP_DIR/.git" ]; then
+              mkdir -p "$APP_DIR"
+              git clone "$REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+
+            # pastikan branch
+            git fetch origin
+            git checkout main
+            git pull --rebase origin main
+
+            # isi ENV untuk domain
+            if [ ! -f .env ]; then
+              echo "APP_DOMAIN=laresae.my.id" > .env
+            fi
+            export $(grep -v '^#' .env | xargs)
+
+            # build & run
+            docker compose --env-file .env up -d --build
+
+            # optional: bersihin dangling images
+            docker image prune -f
