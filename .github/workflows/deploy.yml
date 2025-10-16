@@ -46,7 +46,7 @@ jobs:
 
             # siapkan env (domain buat Traefik label)
             if [ ! -f .env ]; then
-              echo "APP_DOMAIN=${{ secrets.APP_DOMAIN }}" > .env
+              echo "APP_DOMAIN=laresae.my.id" > .env
             fi
             export $(grep -v '^#' .env | xargs || true)
 
