@@ -9,7 +9,7 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.testcicd.rule=Host(`https://laresae.my.id`)"
+      - "traefik.http.routers.testcicd.rule=Host(`laresae.my.id`)"
       - "traefik.http.routers.testcicd-frontend.entrypoints=websecure"
       - "traefik.http.routers.testcicd-frontend.tls=true"
 
