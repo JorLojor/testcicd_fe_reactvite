@@ -10,8 +10,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.testcicd.rule=Host(`https://laresae.my.id`)"
-      - "traefik.http.routers.invix-frontend.entrypoints=websecure"
-      - "traefik.http.routers.invix-frontend.tls=true"
+      - "traefik.http.routers.testcicd-frontend.entrypoints=websecure"
+      - "traefik.http.routers.testcicd-frontend.tls=true"
 
 networks:
   proxy:
