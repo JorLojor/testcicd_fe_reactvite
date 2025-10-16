@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+
+/* biar animasi lebih halus */
+[data-reveal] { will-change: opacity, transform; }
+
+
+/* di index.css */
+.mask-fade-x {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
